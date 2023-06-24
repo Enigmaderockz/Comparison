@@ -1,0 +1,68 @@
+with open(file1, "r") as f1, open(file2, "r") as f2, open(outfile, "w") as outfile:
+        rows1 = read(file1)
+        rows2 = read_file(file2)
+
+        header1 = list(rows1[0].keys())
+        header2 = list(rows2[0].keys())
+
+        # Check if both files have the same headers/field names
+        if header1 != header2:
+            raise ValueError("Headers not matching in both files")
+        
+        if sort_keys is None:
+            sort_key_func = lambda row: tuple(str(row[key]) for key in row.keys())
+        else:
+            sort_key_func = lambda row: tuple(str(row[key]) for key in sort_keys)
+
+        # Use a ThreadPoolExecutor to sort the rows in parallel
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_rows = {executor.submit(sorted, rows, key=sort_key_func): rows for rows in [rows1, rows2]}
+            sorted_rows1, sorted_rows2 = [future.result() for future in concurrent.futures.as_completed(future_to_rows)]
+
+
+
+from functools import cmp_to_key
+
+# ...
+
+def compare_csv_files(file1, file2, outfile, sort_keys=None):
+    # Initialize counters
+    num_records = 0
+    num_diff_records = 0
+    num_records_file1_not_in_file2 = 0
+    num_records_file2_not_in_file1 = 0
+
+    # Open the input files and output file for writing HTML table
+    with open(file1, "r") as f1, open(file2, "r") as f2, open(outfile, "w") as outfile:
+        rows1 = read_file(file1)
+        rows2 = read_file(file2)
+
+        header1 = list(rows1[0].keys())
+        header2 = list(rows2[0].keys())
+
+        # Check if both files have the same headers/field names
+        if header1 != header2:
+            raise ValueError("Headers not matching in both files")
+
+        if sort_keys is None:
+            sort_key_func = lambda row: tuple(row.values())
+        else:
+            def sort_key_func(row):
+                key_values = []
+                for key in sort_keys:
+                    value = row[key]
+                    if isinstance(value, str):
+                        key_values.append(value.lower())
+                    else:
+                        key_values.append(value)
+                return tuple(key_values)
+
+        # Use a ThreadPoolExecutor to sort the rows in parallel
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_rows = {
+                executor.submit(sorted, rows, key=cmp_to_key(sort_key_func)): rows
+                for rows in [rows1, rows2]
+            }
+            sorted_rows1, sorted_rows2 = [future.result() for future in concurrent.futures.as_completed(future_to_rows)]
+
+
