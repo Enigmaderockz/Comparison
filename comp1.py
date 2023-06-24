@@ -1,6 +1,8 @@
 import csv
 import openpyxl
 import os
+import sys
+from operator import itemgetter
 
 
 def read_file(file_path):
@@ -25,7 +27,7 @@ def read_file(file_path):
     return rows
 
 
-def compare_csv_files(file1, file2, outfile):
+def compare_csv_files(file1, file2, outfile, sort_keys=None):
     # Initialize counters
     num_records = 0
     num_diff_records = 0
@@ -40,13 +42,19 @@ def compare_csv_files(file1, file2, outfile):
         header1 = list(rows1[0].keys())
         header2 = list(rows2[0].keys())
 
-        # Check if both files have same headers/fieldnames
+        # Check if both files have the same headers/field names
         if header1 != header2:
             raise ValueError("Headers not matching in both files")
+        
+        if sort_keys is None:
+            sort_key_func = lambda row: tuple(row.values())
+        else:
+            sort_key_func = lambda row: tuple(row[key] for key in sort_keys)
 
-        # Convert each row to a dictionary and sort the rows by the values
-        sorted_rows1 = sorted([row for row in rows1], key=lambda x: list(x.values()))
-        sorted_rows2 = sorted([row for row in rows2], key=lambda x: list(x.values()))
+        # Convert each row to a dictionary and sort the rows by the content
+        sorted_rows1 = sorted(rows1, key=sort_key_func)
+        sorted_rows2 = sorted(rows2, key=sort_key_func)
+
 
         # Count the number of records in each file
         num_records = len(sorted_rows1)
@@ -75,8 +83,8 @@ def compare_csv_files(file1, file2, outfile):
         summary_html += (
             f"<p>Number of Rows with Differences: {int(num_diff_records)}</p>"
         )
-        summary_html += f"<p>Number of records from {file1} differ by from {file2}:  {num_records_file1_not_in_file2}</p>"
-        summary_html += f"<p>Number of records from {file2} differ by from {file1}:  {num_records_file2_not_in_file1}</p>"
+        summary_html += f"<p>Number of records from {file1} differ from {file2}:  {num_records_file1_not_in_file2}</p>"
+        summary_html += f"<p>Number of records from {file2} differ from {file1}:  {num_records_file2_not_in_file1}</p>"
         summary_html += "</div>\n"
 
         # Add the summary HTML to the start of the HTML string
@@ -89,7 +97,7 @@ def compare_csv_files(file1, file2, outfile):
             )
         elif num_diff_records > 0:
             print(
-                f"{file1} and {file2} have differences by {num_diff_records} . Please check the generated HTML for more details."
+                f"{file1} and {file2} have differences by {num_diff_records}. Please check the generated HTML for more details."
             )
 
             diff_rows = []
@@ -101,7 +109,7 @@ def compare_csv_files(file1, file2, outfile):
                 row_diff = False
                 diff_cols = []
 
-                # Check if the values in each column of the row are same
+                # Check if the values in each column of the row are the same
                 for col, val1 in row1.items():
                     val2 = row2[col]
 
@@ -158,5 +166,7 @@ def compare_csv_files(file1, file2, outfile):
         # Write the contents of the entire HTML string to the output file
         outfile.write(html)
 
+# Extract sort_keys from system arguments
+sort_keys = sys.argv[4:] if len(sys.argv) > 4 else None
 
-compare_csv_files("a.csv", "b.csv", "output.html")
+compare_csv_files(sys.argv[1], sys.argv[2], sys.argv[3], sort_keys=sort_keys)
