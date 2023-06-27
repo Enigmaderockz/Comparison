@@ -66,3 +66,46 @@ def compare_csv_files(file1, file2, outfile, sort_keys=None):
             sorted_rows1, sorted_rows2 = [future.result() for future in concurrent.futures.as_completed(future_to_rows)]
 
 
+# new wayt to handle
+
+def mixed_type_sort_key(row, keys=None):
+    if keys is None:
+        keys = row.keys()  # Use all keys if none are specified
+
+    sort_key = []
+    for key in keys:
+        value = row[key]
+        if isinstance(value, str):
+            sort_key.append((1, value))
+        else:
+            sort_key.append((0, value))
+    return tuple(sort_key)
+
+def compare_csv_files(file1, file2, outfile, sort_keys=None):
+    # Initialize counters
+    num_records = 0
+    num_diff_records = 0
+    num_records_file1_not_in_file2 = 0
+    num_records_file2_not_in_file1 = 0
+
+    # Open the input files and output file for writing HTML table
+    with open(file1, "r") as f1, open(file2, "r") as f2, open(outfile, "w") as outfile:
+        rows1 = read_file(file1)
+        rows2 = read_file(file2)
+
+        header1 = list(rows1[0].keys())
+        header2 = list(rows2[0].keys())
+
+        # Check if both files have the same headers/field names
+        if header1 != header2:
+            raise ValueError("Headers not matching in both files")
+        
+        sort_key_func = lambda row: mixed_type_sort_key(row, sort_keys)
+
+        # Use a ThreadPoolExecutor to sort the rows in parallel
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_rows = {executor.submit(sorted, rows, key=sort_key_func): rows for rows in [rows1, rows2]}
+            sorted_rows1, sorted_rows2 = [future.result() for future in concurrent.futures.as_completed(future_to_rows)]
+
+
+
