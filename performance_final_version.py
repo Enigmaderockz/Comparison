@@ -102,12 +102,8 @@ def compare_csv_files(file1, file2, outfile, sort_keys=None, exclude_keys=None):
 
         # Exclude the specified columns
         if len(exclude_keys) > 0:
-            rows1 = [
-                {k: v for k, v in row.items() if k not in exclude_keys} for row in rows1
-            ]
-            rows2 = [
-                {k: v for k, v in row.items() if k not in exclude_keys} for row in rows2
-            ]
+            rows1 = (row for row in rows1 if set(row.keys()).isdisjoint(exclude_keys))
+            rows2 = (row for row in rows2 if set(row.keys()).isdisjoint(exclude_keys))
 
         sort_key_func = lambda row: mixed_type_sort_key(row, sort_keys)
 
