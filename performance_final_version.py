@@ -266,3 +266,20 @@ python comp1.py a.csv b.csv output.html include=none
 python comp1.py a.csv b.csv output.html include="Age;Gender;Last Name"
 python comp1.py a.xlsx b.xlsx output.html include="First Name;Last Name" exclude="Gender;Country"
 """
+
+def compare_csv_files(file1, file2, outfile, sort_keys=None, exclude_keys=None):
+    # ... rest of your code ...
+
+    # Open the input files and output file for writing HTML table
+    with open(file1, "r") as f1, open(file2, "r") as f2, open(outfile, "w") as outfile:
+        rows1 = read_file(file1)
+        rows2 = read_file(file2)
+
+        # Get the headers from the first chunk of data
+        first_chunk1 = next(rows1)
+        first_chunk2 = next(rows2)
+        if not first_chunk1 or not first_chunk2:
+            raise ValueError("One or both files are empty")
+
+        header1 = list(first_chunk1[0].keys())
+        header2 = list(first_chunk2[0].keys())
