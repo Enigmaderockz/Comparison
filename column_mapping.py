@@ -13,9 +13,7 @@ def read_file(file_path, column_mapping=None):
     if file_extension == ".csv":
         with open(file_path, 'r') as file:
             dialect = csv.Sniffer().sniff(file.read(1024))
-            delimiter = dialect.delimiter
-            file.seek(0)
-        for chunk in pd.read_csv(file_path, chunksize=10000, dtype=str, delimiter=delimiter):
+        for chunk in pd.read_csv(file_path, chunksize=10000, dtype=str, delimiter=dialect.delimiter):
             if column_mapping:
                 chunk = chunk.rename(columns=column_mapping)
             for row in chunk.to_dict("records"):
