@@ -205,6 +205,8 @@ def compare_csv_files(
                 # Check if the values in each column of the row are the same
                 for col, val1 in row1.items():
                     val2 = row2[col]
+                    if pd.isnull(val1) and pd.isnull(val2):
+                        continue
 
                     # If the values in the columns are different, add the column index to diff_cols list
                     if val1 != val2:
