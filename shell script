@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Function to compare CSV files
+compare_csv() {
+    # Parse function arguments
+    file1=$1
+    file2=$2
+    html=$3
+    col_check=${4:-}
+    column_mapping=${5:-}
+    sort_keys=${6:-}
+    exclude=${7:-}
+
+    # Rest of the function logic goes here
+    # ...
+}
+
+# Check if all mandatory arguments are provided
+if [ $# -lt 3 ]; then
+    echo "Usage: $0 file1 file2 html [col_check] [column_mapping] [sort_keys] [exclude]"
+    exit 1
+fi
+
+# Call the compare_csv function with provided arguments
+compare_csv "$1" "$2" "$3" "$4" "$5" "$6" "$7"
