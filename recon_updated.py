@@ -220,3 +220,57 @@ for file, new_name in files.items():
     os.remove(file)
 
 print("Files copied and renamed successfully.")
+
+changes related to col_check'
+
+import csv
+import sys
+
+def get_column_values(file_path, delimiter):
+    with open(file_path, 'r') as f:
+        reader = csv.reader(f, delimiter=delimiter)
+        column_values = next(reader)
+        return delimiter.join(column_values)
+
+# Run the compare_csv function with the required parameters
+file1 = "a.dat"
+file2 = "b.dat"
+column_mapping = None
+col_check = None
+
+for arg in sys.argv:
+    if arg.startswith("col_check="):
+        _, value = arg.split("=")
+        if value.lower() != "none":
+            if value == "*":
+                with open(file2, 'r') as f:
+                    # Check the delimiter of file2
+                    first_line = f.readline().strip()
+                    if "|" in first_line:
+                        delimiter = "|"
+                    else:
+                        delimiter = ","
+                    col_check = get_column_values(file2, delimiter)
+                    print(col_check)
+            else:
+                col_check = value
+    elif arg.startswith("column_mapping="):
+        _, value = arg.split("=")
+        if value.lower() == "y":
+            with open("mapping.txt", "r") as f:
+                column_mapping = {}
+                lines = f.readlines()
+                for line in lines:
+                    mapping = line.strip().split(":")
+                    if len(mapping) == 2:
+                        src_cols = mapping[0].split(",")
+                        dest_cols = mapping[1].split(",")
+                        for src_col, dest_col in zip(src_cols, dest_cols):
+                            column_mapping[src_col] = dest_col
+        else:
+            column_mapping = None
+
+compare_csv(file1, file2, col_check=col_check, column_mapping=column_mapping)
+
+
+
