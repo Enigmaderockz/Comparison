@@ -156,27 +156,32 @@ def compare_csv_files(
         html = "<html>\n<head>\n<style>\nbody {font-family: Helvetica;}\n</style>\n</head>\n<body>\n"
 
         # Read the contents of output.csv
-        with open("output.csv", "rb") as file:
-            csv_content = file.read()
+        with open("output.csv", "r") as file:
+            csv_content = [line.strip() for line in file if line.strip()]
+
+        # Check if both lines contain ": 0"
+        recon_status = all(": 0" in line for line in csv_content)
 
         # Encode the contents as Base64
-        csv_base64 = base64.b64encode(csv_content).decode("utf-8")
+        csv_base64 = base64.b64encode("".join(csv_content).encode()).decode("utf-8")
 
         # Embed the CSV as a data URI
-        html += (
-            '<div style="font-family: Helvetica, sans-serif; margin-top: 20px;">\n'
-        )
+        html += '<div style="font-family: Helvetica, sans-serif; margin-top: 20px;">\n'
         html += '<table style="border-collapse: collapse;">'
-        html += '<tr style="background-color: #92b9bf; border: 1px solid black;"><th colspan="100" style="border: 1px solid black;">Please download below file to check recon summary:</th></tr>'
+
+        # Add the recon status to the HTML
+        if recon_status:
+            html += '<th colspan="100" style="color: green; font-weight: bold;">Recon Status: OK</th></tr>'
+        else:
+            html += '<th colspan="100" style="color: red; font-weight: bold;">Recon Status: NOK</th></tr>'
+
         html += "<tr><td></td></tr>\n"
         html += (
             '<tr><td><a href="data:text/csv;base64,'
             + csv_base64
             + '" download="output.csv">Recon summary</a></td></tr>\n'
         )
-        html += (
-            '<tr style="height: 20px;"><td></td></tr>\n'  # Add spacing of 20 pixels
-        )
+        html += '<tr style="height: 20px;"><td></td></tr>\n'  # Add spacing of 20 pixels
         html += "</table>\n"
         html += "</div>\n"
         html += (
