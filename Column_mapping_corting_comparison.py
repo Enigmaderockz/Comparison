@@ -369,6 +369,25 @@ Usage:
 python comp1.py a.csv b.csv output.html include=*
 python comp1.py a.csv b.csv output.html include=none
 python comp1.py a.csv b.csv output.html include="Age;Gender;Last Name"
+
+# better comaprison
+
+sorted_rows1_set = set(
+            tuple(sorted(sorted_row.items())) for sorted_row in sorted_rows1
+        )
+        sorted_rows2_set = set(
+            tuple(sorted(sorted_row.items())) for sorted_row in sorted_rows2
+        )
+
+        # Get the symmetric difference between the two sets
+        sym_diff = sorted_rows1_set.symmetric_difference(sorted_rows2_set)
+
+        # Calculate the number of different records
+        num_diff_records = len(sym_diff)
+
+        # Calculate the number of records in file1 not in file2 and vice versa
+        num_records_file1_not_in_file2 = len([rec for rec in sym_diff if rec in sorted_rows1_set])
+        num_records_file2_not_in_file1 = len([rec for rec in sym_diff if rec in sorted_rows2_set])
 python comp1.py a.xlsx b.xlsx output.html include="First Name;Last Name" exclude="Gender;Country"
 python comp2.py a.csv b.csv b.html column_mapping=y
 """
