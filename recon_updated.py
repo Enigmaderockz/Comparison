@@ -287,31 +287,27 @@ def create_temp_files(file1, file2, buffer_size=1024*1024, column_mapping=None):
         shutil.copyfileobj(fsrc, fdst, buffer_size)
 
 # One more
-import os
-import shutil
-import threading
 
 import os
 import shutil
 import threading
 import time
 
+def copy_file(src, dst, buffer_size):
+    start_time = time.time()  # Start measuring time
+    with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
+        shutil.copyfileobj(fsrc, fdst, buffer_size)
+    end_time = time.time()  # End measuring time
+    elapsed_time = end_time - start_time
+    print(f"Copying {src} to {dst} took {elapsed_time} seconds.")
+
 def create_temp_files(file1, file2, buffer_size=1024*1024, column_mapping=None):
     delimiter = fetch_delimiter(file1)
     print(delimiter)
 
-    # Define a function for copying files
-    def copy_file(src, dst):
-        start_time = time.time()  # Start measuring time
-        with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
-            shutil.copyfileobj(fsrc, fdst, buffer_size)
-        end_time = time.time()  # End measuring time
-        elapsed_time = end_time - start_time
-        print(f"Copying {src} to {dst} took {elapsed_time} seconds.")
-
     # Create threads for copying file1 and file2
-    thread1 = threading.Thread(target=copy_file, args=(file1, 'a_tmp.csv'))
-    thread2 = threading.Thread(target=copy_file, args=(file2, 'b_tmp.csv'))
+    thread1 = threading.Thread(target=copy_file, args=(file1, 'a_tmp.csv', buffer_size))
+    thread2 = threading.Thread(target=copy_file, args=(file2, 'b_tmp.csv', buffer_size))
 
     # Start the threads
     thread1.start()
@@ -323,6 +319,7 @@ def create_temp_files(file1, file2, buffer_size=1024*1024, column_mapping=None):
 
 # Example usage
 create_temp_files('file1.csv', 'file2.csv', buffer_size=8*1024*1024)
+
 
 
 
