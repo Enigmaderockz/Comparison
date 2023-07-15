@@ -272,5 +272,19 @@ for arg in sys.argv:
 
 compare_csv(file1, file2, col_check=col_check, column_mapping=column_mapping)
 
+#updating copy
+
+def create_temp_files(file1, file2, buffer_size=1024*1024, column_mapping=None):
+    delimiter = fetch_delimiter(file1)
+    print(delimiter)
+
+    # Copy file1
+    with open(file1, 'rb') as fsrc, open('a_tmp.csv', 'wb') as fdst:
+        shutil.copyfileobj(fsrc, fdst, buffer_size)
+
+    # Copy file2
+    with open(file2, 'rb') as fsrc, open('b_tmp.csv', 'wb') as fdst:
+        shutil.copyfileobj(fsrc, fdst, buffer_size)
+
 
 
