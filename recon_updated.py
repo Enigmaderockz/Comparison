@@ -286,5 +286,35 @@ def create_temp_files(file1, file2, buffer_size=1024*1024, column_mapping=None):
     with open(file2, 'rb') as fsrc, open('b_tmp.csv', 'wb') as fdst:
         shutil.copyfileobj(fsrc, fdst, buffer_size)
 
+# One more
+import os
+import shutil
+import threading
+
+def create_temp_files(file1, file2, buffer_size=1024*1024, column_mapping=None):
+    delimiter = fetch_delimiter(file1)
+    print(delimiter)
+
+    # Define a function for copying files
+    def copy_file(src, dst):
+        with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
+            shutil.copyfileobj(fsrc, fdst, buffer_size)
+
+    # Create threads for copying file1 and file2
+    thread1 = threading.Thread(target=copy_file, args=(file1, 'a_tmp.csv'))
+    thread2 = threading.Thread(target=copy_file, args=(file2, 'b_tmp.csv'))
+
+    # Start the threads
+    thread1.start()
+    thread2.start()
+
+    # Wait for both threads to finish
+    thread1.join()
+    thread2.join()
+
+# Example usage
+create_temp_files('file1.csv', 'file2.csv', buffer_size=8*1024*1024)
+
+
 
 
