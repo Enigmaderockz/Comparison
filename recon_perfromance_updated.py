@@ -131,3 +131,50 @@ def perform_recon_on_files(file1, file2, col_check=None, column_mapping=None):
             writer1.writerows(rows1)
             writer2.writerows(rows2)
 
+
+#with loggers
+
+import logging
+
+# Configure logger
+logging.basicConfig(level=logging.INFO, filename='logfile.log', filemode='w')
+logger = logging.getLogger()
+
+def fetch_delimiter(file_path):
+    _, file_extension = os.path.splitext(file_path)
+    if file_extension == ".csv" or file_extension == ".dat":
+        with open(file_path, "r") as file:
+            dialect = csv.Sniffer().sniff(file.read(102400))
+            return dialect.delimiter
+
+def read_mapping(file):
+    with open(file, "r") as f:
+        mapping = {}
+        for line in f:
+            cols = line.strip().split(":")
+            source_cols = cols[0].split(",")
+            target_cols = cols[1].split(",")
+            for i in range(len(source_cols)):
+                mapping[source_cols[i]] = target_cols[i]
+    return mapping
+
+def update_column_names(file, column_mapping):
+    with open(file, "r") as f:
+        reader = csv.DictReader(f, delimiter=delimiter)
+        rows = list(reader)
+        new_fieldnames = [column_mapping.get(name, name) for name in reader.fieldnames]
+
+    with open(file, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=new_fieldnames, delimiter=delimiter)
+        writer.writeheader()
+        for row in rows:
+            new_row = {
+                column_mapping.get(name, name): value for name, value in row.items()
+            }
+            writer.writerow(new_row)
+
+def create_temp_files(file1, file2, column_mapping=None, buffer_size=1024 * 1024):
+    global delimiter
+    delimiter = fetch_delimiter(file1)
+    logger.info(f"Delimiter: {delimiter}")
+
