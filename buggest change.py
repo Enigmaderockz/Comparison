@@ -74,7 +74,6 @@ def perform_recon_on_files(file1, file2, col_check=None, column_mapping=None):
 
         col_check_list = col_check.split(",")
 
-
         if column_mapping is not None:
             col_check_list = [column_mapping.get(col, col) for col in col_check_list]
 
@@ -88,14 +87,16 @@ def perform_recon_on_files(file1, file2, col_check=None, column_mapping=None):
 
         # Write the results to output.csv
         with open("output1.csv", "w", newline="") as output_file:
-            writer = csv.writer(output_file, delimiter=delimiter1)  # Use ',' as delimiter
+            writer = csv.writer(
+                output_file, delimiter=delimiter1
+            )  # Use ',' as delimiter
 
             # Write the first set of extra records
-            #writer.writerow([f"Extra records in {file1} which are not present in {file2} based on " + col_check + ": " + str(len(extra_records1))])
-            #writer.writerow([])
+            # writer.writerow([f"Extra records in {file1} which are not present in {file2} based on " + col_check + ": " + str(len(extra_records1))])
+            # writer.writerow([])
             if not extra_records1.empty:
                 writer.writerow(extra_records1.columns)
-                extra_records1 = extra_records1.fillna('')
+                extra_records1 = extra_records1.fillna("")
                 writer.writerows(extra_records1.values)
             else:
                 writer.writerow([])
@@ -103,14 +104,14 @@ def perform_recon_on_files(file1, file2, col_check=None, column_mapping=None):
             writer.writerow([])
 
         with open("output2.csv", "w", newline="") as output_file:
-            writer = csv.writer(output_file, delimiter=delimiter1)  
+            writer = csv.writer(output_file, delimiter=delimiter1)
 
             # Write the second set of extra records
-            #writer.writerow([f"Extra records in {file2} which are not present in {file1} based on " + col_check + ": " + str(len(extra_records2))])
-            #writer.writerow([])
+            # writer.writerow([f"Extra records in {file2} which are not present in {file1} based on " + col_check + ": " + str(len(extra_records2))])
+            # writer.writerow([])
             if not extra_records2.empty:
                 writer.writerow(extra_records2.columns)
-                extra_records2 = extra_records2.fillna('')
+                extra_records2 = extra_records2.fillna("")
                 writer.writerows(extra_records2.values)
             else:
                 writer.writerow([])
@@ -121,8 +122,6 @@ def perform_recon_on_files(file1, file2, col_check=None, column_mapping=None):
         df1.to_csv(file1, index=False, sep=delimiter1)
         df2.to_csv(file2, index=False, sep=delimiter2)
         return len(extra_records1), len(extra_records2)
-
-    
 
 
 # Run the compare_csv function with the required parameters
@@ -166,7 +165,10 @@ def recon(file1, file2, col_check=col_check, column_mapping=column_mapping):
         "a_tmp.csv", "b_tmp.csv", col_check=col_check, column_mapping=column_mapping
     )
     print(rec1)
-    comp2.compare_csv_files("a_tmp.csv", "b_tmp.csv", "output.html", rec1, rec2, col_check=col_check)
+    comp2.compare_csv_files(
+        "a_tmp.csv", "b_tmp.csv", "output.html", rec1, rec2, col_check=col_check
+    )
+
 
 recon(file1, file2, col_check=col_check, column_mapping=column_mapping)
 
@@ -220,7 +222,15 @@ def mixed_type_sort_key(row, keys=None):
 
 
 def compare_csv_files(
-    file1, file2, outfile, rec1, rec2, sort_keys=None, exclude_keys=None, column_mapping=None
+    file1,
+    file2,
+    outfile,
+    rec1,
+    rec2,
+    sort_keys=None,
+    exclude_keys=None,
+    column_mapping=None,
+    col_check=None,
 ):
     print(column_mapping)
     usr_exclusion_msg = (
@@ -346,52 +356,47 @@ def compare_csv_files(
 
         if rec1 == 0 and rec2 == 0:
             html += '<th colspan="100" style="color: green; font-weight: bold;">Recon Status: OK</th></tr>'
-            html += f"<tr><td>Extra records in {file1} which are not present in {file2} based on: {str(rec1)}</td></tr>\n"
-            html += f"<tr><td>Extra records in {file2} which are not present in {file1} based on: {str(rec2)}</td></tr>\n"
+            html += f"<tr><td>Extra records in {file1} which are not present in {file2} based on columns {col_check}: {str(rec1)}</td></tr>\n"
+            html += f"<tr><td>Extra records in {file2} which are not present in {file1} based on columns {col_check}: {str(rec2)}</td></tr>\n"
         else:
             html += '<th colspan="100" style="color: red; font-weight: bold;">Recon Status: NOK</th></tr>'
 
             if rec2 != 0 and rec1 != 0:
-                html += f"<tr><td>Extra records in {file1} which are not present in {file2} based on: {str(rec1)}</td></tr>\n"
+                html += f"<tr><td>Extra records in {file1} which are not present in {file2} based on columns {col_check}: {str(rec1)}</td></tr>\n"
                 html += (
                     '<tr><td><a href="data:text/csv;base64,'
                     + csv_base64_1
                     + '" download="output.csv">Recon summary1</a></td></tr>\n'
                 )
-                html += f"<tr><td>Extra records in {file2} which are not present in {file1} based on: {str(rec2)}</td></tr>\n"
+                html += f"<tr><td>Extra records in {file2} which are not present in {file1} based on columns {col_check}: {str(rec2)}</td></tr>\n"
                 html += (
                     '<tr><td><a href="data:text/csv;base64,'
                     + csv_base64_2
                     + '" download="output.csv">Recon summary2</a></td></tr>\n'
                 )
-            
+
             if rec1 != 0 and rec2 == 0:
-                html += f"<tr><td>Extra records in {file1} which are not present in {file2} based on: {str(rec1)}</td></tr>\n"
+                html += f"<tr><td>Extra records in {file1} which are not present in {file2} based on columns {col_check}: {str(rec1)}</td></tr>\n"
                 html += (
                     '<tr><td><a href="data:text/csv;base64,'
                     + csv_base64_1
                     + '" download="output.csv">Recon summary1</a></td></tr>\n'
                 )
-                html += f"<tr><td>Extra records in {file2} which are not present in {file1} based on: {str(rec2)}</td></tr>\n"
+                html += f"<tr><td>Extra records in {file2} which are not present in {file1} based on columns {col_check}: {str(rec2)}</td></tr>\n"
 
-            
             if rec2 != 0 and rec1 == 0:
-                html += f"<tr><td>Extra records in {file2} which are not present in {file1} based on: {str(rec2)}</td></tr>\n"
+                html += f"<tr><td>Extra records in {file2} which are not present in {file1} based on columns {col_check}: {str(rec2)}</td></tr>\n"
                 html += (
                     '<tr><td><a href="data:text/csv;base64,'
                     + csv_base64_2
                     + '" download="output.csv">Recon summary2</a></td></tr>\n'
                 )
-                html += f"<tr><td>Extra records in {file1} which are not present in {file2} based on: {str(rec1)}</td></tr>\n"
-
+                html += f"<tr><td>Extra records in {file1} which are not present in {file2} based on columns {col_check}: {str(rec1)}</td></tr>\n"
 
         html += '<tr style="height: 20px;"><td></td></tr>\n'  # Add spacing of 20 pixels
         html += "</table>\n"
         html += "</div>\n"
 
-
-
-        
         html += (
             '<tr><th style="border: 1px solid black;">Comparison Summary:-</th></tr>'
         )
@@ -413,7 +418,7 @@ def compare_csv_files(
             sorted_rows2_set.difference(sorted_rows1_set)
         )
 
-        #col = "/v/g/"
+        # col = "/v/g/"
 
         # Generate HTML for comparison summary
         summary_html = '<div style="font-size: 15px;">'
@@ -423,8 +428,8 @@ def compare_csv_files(
         )
         summary_html += f"<p>Number of records from {file1} differ from {file2}:  {num_records_file1_not_in_file2}</p>"
         summary_html += f"<p>Number of records from {file2} differ from {file1}:  {num_records_file2_not_in_file1}</p>"
-        #summary_html += f"<p>Number of records from {file1.replace('_tmp', '')} differ from {col}.{file2.replace('_tmp', '')}:  {num_records_file1_not_in_file2}</p>"
-        #summary_html += f"<p>Number of records from {file2.replace('_tmp', '')} differ from {col}.{file1.replace('_tmp', '')}:  {num_records_file2_not_in_file1}</p>"
+        # summary_html += f"<p>Number of records from {file1.replace('_tmp', '')} differ from {col}.{file2.replace('_tmp', '')}:  {num_records_file1_not_in_file2}</p>"
+        # summary_html += f"<p>Number of records from {file2.replace('_tmp', '')} differ from {col}.{file1.replace('_tmp', '')}:  {num_records_file2_not_in_file1}</p>"
         summary_html += f"<p>Please Note: {combined_html_msg}</p>"
         summary_html += "</div>\n"
 
@@ -508,7 +513,9 @@ def compare_csv_files(
                                 html += f'<td style="border: 1px solid black; background-color: #ffcfbf;font-weight: bold;">{diff_row[2][col]}</td>'
                         else:
                             if pd.isnull(diff_row[2][col]):
-                                html += f'<td style="border: 1px solid black;">NULL</td>'
+                                html += (
+                                    f'<td style="border: 1px solid black;">NULL</td>'
+                                )
                             else:
                                 html += f'<td style="border: 1px solid black;">{diff_row[2][col]}</td>'
                     else:
@@ -530,7 +537,9 @@ def compare_csv_files(
                                 html += f'<td style="border: 1px solid black; background-color: #ffcfbf;font-weight: bold;">{diff_row[3][col]}</td>'
                         else:
                             if pd.isnull(diff_row[3][col]):
-                                html += f'<td style="border: 1px solid black;">NULL</td>'
+                                html += (
+                                    f'<td style="border: 1px solid black;">NULL</td>'
+                                )
                             else:
                                 html += f'<td style="border: 1px solid black;">{diff_row[3][col]}</td>'
                     else:
@@ -580,7 +589,7 @@ for arg in sys.argv:
         else:
             column_mapping = None
 
-'''
+"""
 compare_csv_files(
     sys.argv[1],
     sys.argv[2],
@@ -589,7 +598,7 @@ compare_csv_files(
     exclude_keys=exclude_keys,
     column_mapping=column_mapping,
 )
-'''
+"""
 
 
 """
