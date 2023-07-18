@@ -7,9 +7,9 @@ import concurrent.futures
 import logging
 import datetime
 
-# Create a logger
+# Logger configuration
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 # Create a file handler for the logger
 log_file = f"recon_{datetime.date.today()}.log"
@@ -65,8 +65,7 @@ def update_column_names(file, column_mapping):
 def create_temp_files(file1, file2, column_mapping=None, buffer_size=1024 * 1024):
     global delimiter
     delimiter = fetch_delimiter(file1)
-    logger.info(f"Delimiter: {delimiter}")
-
+    logger.info("Delimiter: %s", delimiter)
     # Copy file1
     with open(file1, "rb") as fsrc, open("a_tmp.csv", "wb") as fdst:
         shutil.copyfileobj(fsrc, fdst, buffer_size)
@@ -77,12 +76,12 @@ def create_temp_files(file1, file2, column_mapping=None, buffer_size=1024 * 1024
 
     if column_mapping is not None:
         column_mapping = read_mapping("mapping.txt")
-        logger.info(f"Column Mapping: {column_mapping}")
+        logger.info("Column Mapping: %s", column_mapping)
         update_column_names("a_tmp.csv", column_mapping)
         update_column_names("b_tmp.csv", column_mapping)
 
 def perform_recon_on_files(file1, file2, col_check=None, column_mapping=None):
-    logger.info(f"col_check: {col_check}")
+    logger.info("Col Check: %s", col_check)
     delimiter1 = ","
     delimiter2 = "|"
     if col_check is not None:
@@ -138,16 +137,16 @@ def perform_recon_on_files(file1, file2, col_check=None, column_mapping=None):
         df2.to_csv(file2, index=False, sep=delimiter2)
 
 def compare_csv(file1, file2, col_check=None, column_mapping=None):
-    assert os.path.isfile(file1), f"{file1} does not exist."
-    assert os.path.isfile(file2), f"{file2} does not exist."
-    assert os.path.isfile("mapping.txt"), "mapping.txt does not exist."
-    assert os.path.isfile(file1) and os.path.isfile(file2), "Temporary files 'a_tmp.csv' and 'b_tmp.csv' not created."
-    assert os.path.isfile("output.csv"), "output.csv not created."
-
-    create_temp_files(file1, file2, column_mapping)
-    perform_recon_on_files(
-        "a_tmp.csv", "b_tmp.csv", col_check=col_check, column_mapping=column_mapping
-    )
+    try:
+        create_temp_files(file1, file2, column_mapping)
+        perform_recon_on_files(
+            "a_tmp.csv", "b_tmp.csv", col_check=col_check, column_mapping=column_mapping
+        )
+    except FileNotFoundError as e:
+        logger.error("File not found: %s", e.filename)
+        raise
+    except Exception as e:
+        logger.error(str(e))
 
 # Run the compare_csv function with the required parameters
 file1 = "a.dat"
@@ -155,36 +154,34 @@ file2 = "b.dat"
 column_mapping = None
 col_check = None
 
-try:
-    for arg in sys.argv:
-        if arg.startswith("col_check="):
-            _, value = arg.split("=")
-            if value.lower() != "none":
-                if value == "*":
-                    with open(file2, "r") as f:
-                        reader = csv.reader(f)
-                        col_check = next(reader)
-                        col_check = ",".join(col_check)
-                        logger.info(f"col_check: {col_check}")
-                else:
-                    col_check = value
-        elif arg.startswith("column_mapping="):
-            _, value = arg.split("=")
-            if value.lower() == "y":
-                with open("mapping.txt", "r") as f:
-                    column_mapping = {}
-                    lines = f.readlines()
-                    for line in lines:
-                        mapping = line.strip().split(":")
-                        if len(mapping) == 2:
-                            src_cols = mapping[0].split(",")
-                            dest_cols = mapping[1].split(",")
-                            for src_col, dest_col in zip(src_cols, dest_cols):
-                                column_mapping[src_col] = dest_col
+for arg in sys.argv:
+    if arg.startswith("col_check="):
+        _, value = arg.split("=")
+        if value.lower() != "none":
+            if value == "*":
+                with open(file2, "r") as f:
+                    reader = csv.reader(f)
+                    col_check = next(reader)
+                    col_check = ",".join(col_check)
+                    logger.info("Col Check: %s", col_check)
             else:
-                column_mapping = None
+                col_check = value
+    elif arg.startswith("column_mapping="):
+        _, value = arg.split("=")
+        if value.lower() == "y":
+            with open("mapping.txt", "r") as f:
+                column_mapping = {}
+                lines = f.readlines()
+                for line in lines:
+                    mapping = line.strip().split(":")
+                    if len(mapping) == 2:
+                        src_cols = mapping[0].split(",")
+                        dest_cols = mapping[1].split(",")
+                        for src_col, dest_col in zip(src_cols, dest_cols):
+                            column_mapping[src_col] = dest_col
+        else:
+            column_mapping = None
 
-    compare_csv(file1, file2, col_check=col_check, column_mapping=column_mapping)
 
-except Exception as e:
-    logger.error(str(e))
+compare_csv(file1, file2, col_check=col_check, column_mapping=column_mapping)
+
