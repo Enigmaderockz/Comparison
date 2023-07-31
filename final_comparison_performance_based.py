@@ -12,6 +12,7 @@ from functools import partial
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
+'''
 def parallel_sort_rows(rows, sort_keys=None):
     # Number of parallel threads (adjust according to your system)
     num_threads = 4
@@ -21,6 +22,17 @@ def parallel_sort_rows(rows, sort_keys=None):
         sorted_rows = future.result()
 
     return sorted_rows
+'''
+def parallel_sort_rows(rows, sort_keys=None):
+    # Number of parallel threads (adjust according to your system)
+    num_threads = 4
+
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        future = executor.submit(list, rows)  # Convert rows to a list
+        rows_list = future.result()
+        rows_list.sort(key=lambda row: mixed_type_sort_key(row, sort_keys))  # Sort the list
+
+    return rows_list
 
 def parallel_compare_rows(row1, row2):
     # Compare each row from both files and return the differences
