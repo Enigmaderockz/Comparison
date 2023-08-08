@@ -13,6 +13,7 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 '''
+#                                                                                          Improved way 1
 def parallel_sort_rows(rows, sort_keys=None):
     # Number of parallel threads (adjust according to your system)
     num_threads = 4
@@ -22,7 +23,8 @@ def parallel_sort_rows(rows, sort_keys=None):
         sorted_rows = future.result()
 
     return sorted_rows
-'''
+    
+#                                                                                          Improved way 2
 def parallel_sort_rows(rows, sort_keys=None):
     # Number of parallel threads (adjust according to your system)
     num_threads = 4
@@ -33,7 +35,30 @@ def parallel_sort_rows(rows, sort_keys=None):
         rows_list.sort(key=lambda row: mixed_type_sort_key(row, sort_keys))  # Sort the list
 
     return rows_list
+'''
+#                                                                                          Improved way 3
 
+def chunks(iterable, chunk_size):
+    """Yield successive chunks from iterable."""
+    iterator = iter(iterable)
+    while True:
+        chunk = list(itertools.islice(iterator, chunk_size))
+        if not chunk:
+            return
+        yield chunk
+
+def parallel_sort_rows(rows, sort_keys=None):
+    # Number of parallel threads (adjust according to your system)
+    num_threads = 4
+
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        sorted_rows = []
+        for chunk in chunks(rows, chunk_size=10000):
+            future = executor.submit(sorted, chunk, key=lambda row: mixed_type_sort_key(row, sort_keys))
+            sorted_rows.append(future.result())
+
+    return list(heapq.merge(*sorted_rows, key=lambda row: mixed_type_sort_key(row, sort_keys)))
+    
 def parallel_compare_rows(row1, row2):
     # Compare each row from both files and return the differences
     row_diff = False
