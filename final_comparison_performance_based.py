@@ -10,7 +10,9 @@ import base64
 from multiprocessing import Pool
 from functools import partial
 import subprocess
+import heapq
 from concurrent.futures import ThreadPoolExecutor
+
 
 '''
 #                                                                                          Improved way 1
