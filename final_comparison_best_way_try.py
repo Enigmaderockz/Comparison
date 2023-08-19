@@ -1,6 +1,5 @@
 #baap
 
-import csv
 import openpyxl
 import os
 import sys
@@ -9,23 +8,10 @@ import concurrent.futures
 import pandas as pd
 import itertools
 import base64
-from multiprocessing import Pool
-from functools import partial
-import subprocess
 from concurrent.futures import ThreadPoolExecutor
 import heapq
-from concurrent.futures import ThreadPoolExecutor
-'''
-def parallel_sort_rows(rows, sort_keys=None):
-    # Number of parallel threads (adjust according to your system)
-    num_threads = 4
 
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        future = executor.submit(sorted, rows, key=lambda row: mixed_type_sort_key(row, sort_keys))
-        sorted_rows = future.result()
 
-    return sorted_rows
-'''
 def chunks(iterable, chunk_size):
     """Yield successive chunks from iterable."""
     iterator = iter(iterable)
@@ -361,6 +347,7 @@ def compare_csv_files(
             html += "</table>\n"
         # Write the contents of the entire HTML string to the output file
         outfile.write(html)
+        future.result(timeout=60)
 
 
 # Extract sort_keys from system arguments
