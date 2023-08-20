@@ -85,6 +85,30 @@ def read_file(file_path, column_mapping=None):
     else:
         raise ValueError("Unsupported file format")
 '''
+'''
+def read_file(file_path, column_mapping=None):
+    _, file_extension = os.path.splitext(file_path)
+    if file_extension == ".csv":
+        df = dd.read_csv(file_path, dtype=str, assume_missing=True)
+        if column_mapping:
+            df = df.rename(columns=column_mapping)
+        for chunk in df.to_delayed():
+            chunk = chunk.compute()  # Convert dask.dataframe.DataFrame to pandas.DataFrame
+            for row in chunk.to_dict(orient="records"):
+                yield row
+    elif file_extension == ".xlsx":
+        wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+        for sheet_name in wb.sheetnames:
+            sheet = wb[sheet_name]
+            header = [cell.value for cell in sheet[1]]
+            if column_mapping:
+                header = [column_mapping.get(col, col) for col in header]
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                row_dict = {header[i]: value for i, value in enumerate(row)}
+                yield row_dict
+    else:
+        raise ValueError("Unsupported file format")
+'''
 
 def read_file(file_path, column_mapping=None):
     _, file_extension = os.path.splitext(file_path)
