@@ -8,7 +8,7 @@ import concurrent.futures
 import pandas as pd
 import itertools
 import base64
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 import heapq
 
 
@@ -312,6 +312,7 @@ def compare_csv_files(
 
             # Write the headers of CSV files
             for col in header1:
+                print(header1)
                 html += f'<th style="border: 1px solid black;">{col}</th>'
 
             html += "</tr>\n"
@@ -347,7 +348,17 @@ def compare_csv_files(
             html += "</table>\n"
         # Write the contents of the entire HTML string to the output file
         outfile.write(html)
-        future.result(timeout=60)
+        # Collect the results of the futures and wait for at most 30 seconds
+        completed_futures, running_futures = wait(futures, timeout=30)
+
+        # Print any exceptions raised during the completed futures
+        for future in completed_futures:
+            if future.exception() is not None:
+                print(f"Exception in future: {future.exception()}")
+
+        # Print a message for any running futures
+        for future in running_futures:
+            print(f"Future still running: {future}")
 
 
 # Extract sort_keys from system arguments
