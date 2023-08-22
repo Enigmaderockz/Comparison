@@ -32,14 +32,27 @@ def parallel_sort_rows(rows, sort_keys=None):
             sorted_rows.append(future.result())
 
     return list(heapq.merge(*sorted_rows, key=lambda row: mixed_type_sort_key(row, sort_keys)))
-
+'''
 def process_batches(sorted_rows, sort_keys, batch_size):
     result_batches = []
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(parallel_sort_rows, batch, sort_keys) for batch in chunks(sorted_rows, 5000)]
     sorted_rows = list(heapq.merge(*[f.result() for f in futures], key=lambda row: mixed_type_sort_key(row, sort_keys)))
     return sorted_rows
+'''
 
+def process_batches(sorted_rows, sort_keys, batch_size):
+    result_batches = []
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(parallel_sort_rows, batch, sort_keys) for batch in chunks(sorted_rows, 5000)]
+        
+        # Wait for all futures to complete
+        completed_futures, running_futures = wait(futures, timeout=30)
+        
+        sorted_rows = list(heapq.merge(*[f.result() for f in completed_futures], key=lambda row: mixed_type_sort_key(row, sort_keys)))
+        
+    return sorted_rows
+    
 def parallel_compare_rows(row1, row2):
     # Compare each row from both files and return the differences
     row_diff = False
