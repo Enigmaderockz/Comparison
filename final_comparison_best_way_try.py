@@ -47,9 +47,13 @@ def process_batches(sorted_rows, sort_keys, batch_size):
         futures = [executor.submit(parallel_sort_rows, batch, sort_keys) for batch in chunks(sorted_rows, 5000)]
         
         # Wait for all futures to complete
-        completed_futures, running_futures = wait(futures, timeout=30)
+        completed_futures, running_futures = wait(futures, timeout=60)
         
         sorted_rows = list(heapq.merge(*[f.result() for f in completed_futures], key=lambda row: mixed_type_sort_key(row, sort_keys)))
+        
+        # If there are still running futures, raise an exception
+        if running_futures:
+            raise TimeoutError("Some of the parallel processes did not finish in time")
         
     return sorted_rows
     
